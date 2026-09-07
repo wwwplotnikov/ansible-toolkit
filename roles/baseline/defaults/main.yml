@@ -1,0 +1,21 @@
+---
+server_hostname: localhost
+server_timezone: Etc/UTC
+
+baseline_packages:
+  - ca-certificates
+  - curl
+  - gnupg
+  - htop
+  - unattended-upgrades
+
+# Full package upgrade on every run. Disable on production
+# hosts where upgrades are handled by a separate maintenance window.
+baseline_upgrade_packages: true
+
+# Reboot automatically when the system requests it.
+# Off by default: rebooting a host must be an explicit decision.
+baseline_reboot_if_required: false
+
+# How long to wait for cloud-init and background apt jobs (seconds)
+baseline_lock_timeout: 300

@@ -1,0 +1,18 @@
+---
+- name: Provision a hardened Docker web server
+  hosts: web
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Fail early when the admin public key is missing on the controller
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.fileglob', admin_ssh_key_file | expanduser) | length > 0
+        fail_msg: "Public key not found on the controller: {{ admin_ssh_key_file }}"
+        quiet: true
+      run_once: true
+
+  roles:
+    - role: baseline
+      tags: [baseline]

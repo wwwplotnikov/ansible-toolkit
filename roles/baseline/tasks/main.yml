@@ -1,0 +1,89 @@
+---
+- name: Assert the target OS is supported
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['os_family'] == 'Debian'
+    fail_msg: "This role supports Debian-family systems only, got {{ ansible_facts['os_family'] }}"
+    quiet: true
+
+- name: Check whether cloud-init is present
+  ansible.builtin.stat:
+    path: /usr/bin/cloud-init
+  register: baseline_cloud_init
+
+- name: Wait for cloud-init to finish
+  ansible.builtin.command: cloud-init status --wait
+  register: baseline_cloud_init_wait
+  changed_when: false
+  failed_when: false
+  when: baseline_cloud_init.stat.exists
+
+- name: Wait for the dpkg frontend lock to be released
+  ansible.builtin.shell: |
+    set -o pipefail
+    fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 && exit 1 || exit 0
+  args:
+    executable: /bin/bash
+  register: baseline_dpkg_lock
+  until: baseline_dpkg_lock.rc == 0
+  retries: "{{ (baseline_lock_timeout / 10) | int }}"
+  delay: 10
+  changed_when: false
+
+- name: Set the system hostname
+  ansible.builtin.hostname:
+    name: "{{ server_hostname }}"
+
+- name: Ensure the hostname resolves locally
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1\s'
+    line: "127.0.1.1 {{ server_hostname }}"
+    state: present
+
+- name: Set the system timezone
+  community.general.timezone:
+    name: "{{ server_timezone }}"
+
+- name: Update the apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  ansible.builtin.apt:
+    upgrade: dist
+  when: baseline_upgrade_packages
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name: "{{ baseline_packages }}"
+    state: present
+
+- name: Configure unattended security upgrades
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check whether a reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: baseline_reboot_required
+
+- name: Reboot the host
+  ansible.builtin.reboot:
+    msg: "Reboot triggered by the baseline role"
+    reboot_timeout: 600
+  when:
+    - baseline_reboot_if_required
+    - baseline_reboot_required.stat.exists
+
+- name: Report that a reboot is pending
+  ansible.builtin.debug:
+    msg: "A reboot is required but baseline_reboot_if_required is false"
+  when:
+    - not baseline_reboot_if_required
+    - baseline_reboot_required.stat.exists

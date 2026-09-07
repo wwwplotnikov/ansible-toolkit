@@ -1,0 +1,33 @@
+---
+# Connection settings
+connect_user: "{{ admin_user }}"
+
+# Admin account created by the users role
+admin_user: deploy
+admin_ssh_key_file: "~/.ssh/ansible_practice.pub"
+admin_shell: /bin/bash
+
+# Baseline
+server_hostname: web-01
+server_timezone: Etc/UTC
+
+# SSH hardening
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_hardening_enabled: true
+
+# Firewall
+ufw_allowed_tcp_ports:
+  - "{{ ssh_port }}"
+  - "{{ web_port }}"
+
+# Docker
+docker_log_max_size: 10m
+docker_log_max_file: "3"
+
+# Web
+web_port: 80
+web_image: nginx:1.29-alpine
+web_server_name: _
+web_root_dir: /opt/web
