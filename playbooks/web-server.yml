@@ -16,3 +16,9 @@
   roles:
     - role: baseline
       tags: [baseline]
+
+    - role: users
+      tags: [users]
+
+    - role: ssh_hardening
+      tags: [ssh]

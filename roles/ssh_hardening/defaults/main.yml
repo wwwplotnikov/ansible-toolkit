@@ -1,0 +1,17 @@
+---
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_pubkey_authentication: "yes"
+ssh_max_auth_tries: 3
+ssh_client_alive_interval: 300
+ssh_client_alive_count_max: 2
+ssh_x11_forwarding: "no"
+
+# Users allowed to log in. Empty list means no AllowUsers directive.
+ssh_allow_users:
+  - "{{ admin_user }}"
+
+# Master switch. When false the role only reports what it would change.
+# Locking yourself out is the default failure mode of this role.
+ssh_hardening_enabled: true

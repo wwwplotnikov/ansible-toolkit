@@ -1,0 +1,11 @@
+---
+admin_user: deploy
+admin_shell: /bin/bash
+admin_ssh_key_file: "~/.ssh/id_ed25519.pub"
+
+admin_groups:
+  - sudo
+
+admin_passwordless_sudo: true
+
+admin_exclusive_keys: false

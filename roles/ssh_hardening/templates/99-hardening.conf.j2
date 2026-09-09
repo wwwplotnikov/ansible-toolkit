@@ -1,0 +1,15 @@
+{{ ansible_managed | comment }}
+Port {{ ssh_port }}
+PermitRootLogin {{ ssh_permit_root_login }}
+PasswordAuthentication {{ ssh_password_authentication }}
+PubkeyAuthentication {{ ssh_pubkey_authentication }}
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+UsePAM yes
+MaxAuthTries {{ ssh_max_auth_tries }}
+X11Forwarding {{ ssh_x11_forwarding }}
+ClientAliveInterval {{ ssh_client_alive_interval }}
+ClientAliveCountMax {{ ssh_client_alive_count_max }}
+{% if ssh_allow_users | length > 0 %}
+AllowUsers {{ ssh_allow_users | join(' ') }}
+{% endif %}

@@ -1,0 +1,42 @@
+---
+- name: Create the admin group
+  ansible.builtin.group:
+    name: "{{ admin_user }}"
+    state: present
+
+- name: Create the admin user
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    group: "{{ admin_user }}"
+    groups: "{{ admin_groups }}"
+    append: true
+    shell: "{{ admin_shell }}"
+    create_home: true
+    state: present
+
+- name: Install the authorized key for the admin user
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ lookup('ansible.builtin.file', admin_ssh_key_file | expanduser) }}"
+    exclusive: "{{ admin_exclusive_keys }}"
+    state: present
+
+- name: Grant passwordless sudo to the admin user
+  ansible.builtin.copy:
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    dest: "/etc/sudoers.d/90-{{ admin_user }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+  when: admin_passwordless_sudo
+
+- name: Grant sudo requiring a password to the admin user
+  ansible.builtin.copy:
+    content: "{{ admin_user }} ALL=(ALL) ALL\n"
+    dest: "/etc/sudoers.d/90-{{ admin_user }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+  when: not admin_passwordless_sudo

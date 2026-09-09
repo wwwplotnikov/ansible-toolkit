@@ -1,0 +1,60 @@
+---
+- name: Verify that the admin user can log in with a key before locking down
+  ansible.builtin.command: >
+    ssh -o BatchMode=yes
+        -o StrictHostKeyChecking=no
+        -o IdentitiesOnly=yes
+        -o ConnectTimeout=10
+        -i {{ ansible_private_key_file }}
+        -p {{ ansible_port | default(22) }}
+        {{ admin_user }}@{{ ansible_host }}
+        true
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  check_mode: false
+  register: ssh_keycheck
+  failed_when: ssh_keycheck.rc != 0
+
+- name: Collect service facts
+  ansible.builtin.service_facts:
+
+- name: Select the sshd unit to restart
+  ansible.builtin.set_fact:
+    sshd_service_name: >-
+      {{ 'ssh.socket'
+         if ansible_facts.services['ssh.socket'] is defined
+            and ansible_facts.services['ssh.socket'].state == 'running'
+         else 'ssh' }}
+  vars:
+    _: "{{ ansible_facts.services | default({}) }}"
+
+- name: Ensure the sshd drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy the sshd hardening drop-in
+  ansible.builtin.template:
+    src: 99-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: "sshd -t -f %s"
+  when: ssh_hardening_enabled
+  notify: Restart sshd
+
+- name: Remove the legacy hardening drop-in
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d/99-hardening.conf
+    state: absent
+  notify: Restart sshd
+
+- name: Report that hardening is disabled
+  ansible.builtin.debug:
+    msg: "ssh_hardening_enabled is false, sshd configuration left untouched"
+  when: not ssh_hardening_enabled
