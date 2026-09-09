@@ -1,0 +1,18 @@
+---
+docker_users:
+  - "{{ admin_user }}"
+
+# Log rotation. Without this, container logs grow until the disk fills.
+docker_log_max_size: 10m
+docker_log_max_file: "3"
+
+# Docker manages iptables itself. Leave this on: turning it off breaks
+# container networking. Exposure is controlled through DOCKER-USER instead.
+docker_manage_iptables: true
+
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin

@@ -25,3 +25,6 @@
 
     - role: firewall
       tags: [firewall]
+
+    - role: docker
+      tags: [docker]
