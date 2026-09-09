@@ -1,0 +1,38 @@
+{{ ansible_managed | comment }}
+*filter
+:ufw-after-input - [0:0]
+:ufw-after-output - [0:0]
+:ufw-after-forward - [0:0]
+:ufw-after-logging-input - [0:0]
+:ufw-after-logging-output - [0:0]
+:ufw-after-logging-forward - [0:0]
+
+# Drop broadcast/multicast NetBIOS noise without logging
+-A ufw-after-input -p udp --dport 137 -j ufw-skip-to-policy-input
+-A ufw-after-input -p udp --dport 138 -j ufw-skip-to-policy-input
+-A ufw-after-input -p tcp --dport 139 -j ufw-skip-to-policy-input
+-A ufw-after-input -p tcp --dport 445 -j ufw-skip-to-policy-input
+-A ufw-after-input -p udp --dport 67 -j ufw-skip-to-policy-input
+-A ufw-after-input -p udp --dport 68 -j ufw-skip-to-policy-input
+-A ufw-after-input -m addrtype --dst-type BROADCAST -j ufw-skip-to-policy-input
+
+COMMIT
+
+*filter
+:DOCKER-USER - [0:0]
+
+# Traffic already belonging to an established connection is allowed back in.
+-A DOCKER-USER -m conntrack --ctstate RELATED,ESTABLISHED -j RETURN
+
+# Container to container and host to container traffic stays untouched.
+-A DOCKER-USER -i docker0 -j RETURN
+-A DOCKER-USER -s 172.16.0.0/12 -j RETURN
+
+{% for port in firewall_docker_allowed_tcp_ports %}
+-A DOCKER-USER -p tcp --dport {{ port }} -j RETURN
+{% endfor %}
+
+# Anything else arriving from outside for a published port is dropped.
+-A DOCKER-USER -j DROP
+
+COMMIT

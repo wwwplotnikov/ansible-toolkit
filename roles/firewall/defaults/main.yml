@@ -1,0 +1,14 @@
+---
+# Ports opened to the world
+firewall_allowed_tcp_ports: []
+
+# Rate limit new SSH connections (6 per 30s per source IP)
+firewall_rate_limit_ssh: true
+firewall_ssh_port: 22
+
+firewall_restrict_docker: true
+
+firewall_docker_allowed_tcp_ports:
+  - 80
+
+firewall_logging: low

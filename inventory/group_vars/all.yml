@@ -18,8 +18,10 @@ ssh_password_authentication: "no"
 ssh_hardening_enabled: true
 
 # Firewall
-ufw_allowed_tcp_ports:
-  - "{{ ssh_port }}"
+# SSH is handled by the rate limiting task below, so it is not listed here
+firewall_allowed_tcp_ports: []
+firewall_ssh_port: "{{ ssh_port }}"
+firewall_docker_allowed_tcp_ports:
   - "{{ web_port }}"
 
 # Docker
