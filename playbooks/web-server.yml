@@ -28,3 +28,6 @@
 
     - role: docker
       tags: [docker]
+
+    - role: web
+      tags: [web]

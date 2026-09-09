@@ -1,0 +1,5 @@
+---
+- name: Restart the web stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ web_root_dir }}"
+    state: restarted

@@ -29,7 +29,7 @@ COMMIT
 -A DOCKER-USER -s 172.16.0.0/12 -j RETURN
 
 {% for port in firewall_docker_allowed_tcp_ports %}
--A DOCKER-USER -p tcp --dport {{ port }} -j RETURN
+-A DOCKER-USER -p tcp -m conntrack --ctorigdstport {{ port }} -j RETURN
 {% endfor %}
 
 # Anything else arriving from outside for a published port is dropped.

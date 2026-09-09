@@ -1,0 +1,57 @@
+---
+- name: Create the web project directory
+  ansible.builtin.file:
+    path: "{{ web_root_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the static content directory
+  ansible.builtin.file:
+    path: "{{ web_root_dir }}/html"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy the nginx site configuration
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: "{{ web_root_dir }}/nginx.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the web stack
+
+- name: Deploy the index page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ web_root_dir }}/html/index.html"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy the compose file
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: "{{ web_root_dir }}/compose.yaml"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart the web stack
+
+- name: Start the web stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ web_root_dir }}"
+    state: present
+    pull: missing
+
+- name: Wait for the web service to respond
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ web_port }}/healthz"
+    status_code: 200
+  register: web_health
+  until: web_health.status == 200
+  retries: 10
+  delay: 3

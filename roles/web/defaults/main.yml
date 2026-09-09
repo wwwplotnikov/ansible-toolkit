@@ -1,0 +1,8 @@
+---
+web_root_dir: /opt/web
+web_port: 80
+web_image: nginx:1.29-alpine
+web_server_name: _
+web_project_name: web
+
+web_bind_address: "0.0.0.0"

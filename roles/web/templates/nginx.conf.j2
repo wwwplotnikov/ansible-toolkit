@@ -1,0 +1,20 @@
+{{ ansible_managed | comment }}
+server {
+    listen 80;
+    server_name {{ web_server_name }};
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    server_tokens off;
+
+    location = /healthz {
+        access_log off;
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
